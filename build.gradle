@@ -2,9 +2,6 @@ apply from: "$rootDir/project-settings.gradle"
 
 buildscript {
     repositories {
-        maven {
-            url 'https://oss.sonatype.org/content/repositories/snapshots'
-        }
         mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
@@ -17,56 +14,46 @@ buildscript {
     }
 }
 
-apply from: "$rootDir/gradle/sonatype-top.gradle"
-
 apply from: "$rootDir/gradle/kotlin-settings.gradle"
-
 apply from: "$rootDir/gradle/idea.gradle"
-apply from: "$rootDir/gradle/sonatype-subproj.gradle"
-apply from: "$rootDir/gradle/bintray.gradle"
+apply from: "$rootDir/gradle/maven-publish.gradle"
+
 
 
 
 if (!JavaVersion.current().java11Compatible) {
     throw new IllegalStateException('''A Haiku:
-                                      |  This needs Java 11,
+                                      |  This needs Java 11+,
                                       |  You are using something else,
                                       |  Refresh. Try again.'''.stripMargin())
 }
 
 repositories {
     mavenCentral()
-    maven {
-        url = 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
 }
 
 dependencies {
-    compile "io.vertx:vertx-core:$version_vertx"
-    compile "io.vertx:vertx-lang-groovy:$version_vertx"
-    compile "io.vertx:vertx-service-factory:$version_vertx"
-    compile "io.vertx:vertx-service-proxy:$version_vertx"
+    implementation "io.vertx:vertx-core:$version_vertx"
+    implementation "io.vertx:vertx-lang-groovy:$version_vertx"
+    implementation "io.vertx:vertx-service-factory:$version_vertx"
+    implementation "io.vertx:vertx-service-proxy:$version_vertx"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
     implementation platform("com.amazonaws:aws-java-sdk-bom:$version_aws")
     implementation("com.amazonaws:aws-java-sdk-sqs")
 
-    compile "nl.komponents.kovenant:kovenant:$version_kovenant"
+    implementation "nl.komponents.kovenant:kovenant:$version_kovenant"
 
-    compileOnly "io.vertx:vertx-codegen:$version_vertx"
-    compile "io.vertx:vertx-codegen:$version_vertx"
-    compile "io.vertx:vertx-codegen:$version_vertx:processor"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
 
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
-
-    testCompile "io.vertx:vertx-unit:$version_vertx"
+    testImplementation "io.vertx:vertx-unit:$version_vertx"
 
     implementation "io.github.microutils:kotlin-logging-jvm:$logging_version"
 
-    testCompile "org.elasticmq:elasticmq-core_2.13:$version_elasticmq"
-    testCompile "org.elasticmq:elasticmq-rest-sqs_2.13:$version_elasticmq"
-    testCompile "junit:junit:$version_junit"
+    testImplementation "org.elasticmq:elasticmq-core_2.13:$version_elasticmq"
+    testImplementation "org.elasticmq:elasticmq-rest-sqs_2.13:$version_elasticmq"
+    testImplementation "junit:junit:$version_junit"
 }
 
 wrapper {

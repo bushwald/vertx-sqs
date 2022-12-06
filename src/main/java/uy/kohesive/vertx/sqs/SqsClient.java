@@ -1,17 +1,14 @@
 package uy.kohesive.vertx.sqs;
 
-import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import kotlin.Unit;
 import uy.kohesive.vertx.sqs.impl.SqsClientImpl;
 
 import java.util.List;
 import java.util.Map;
 
-@VertxGen
 public interface SqsClient {
 
     static SqsClient create(Vertx vertx, JsonObject config) {
@@ -91,9 +88,6 @@ public interface SqsClient {
     void getQueueAttributes(String queueUrl, List<String> attributeNames, Handler<AsyncResult<JsonObject>> resultHandler);
 
 //    void purgeQueue(String queueUrl, Handler<AsyncResult<Void>> resultHandler);
-
-    //.messageGroupId(sqsGroupId + "-" + groupSubdivider)
-    //				.messageDeduplicationId(UUID.randomUUID().toString())
 
 
     void listDeadLetterSourceQueues(String queueUrl, Handler<AsyncResult<List<String>>> resultHandler);
