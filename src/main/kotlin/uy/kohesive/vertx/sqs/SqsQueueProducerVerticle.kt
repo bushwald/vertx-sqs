@@ -46,6 +46,7 @@ class SqsQueueProducerVerticle() : AbstractVerticle(), SqsVerticle {
                 }
                 consumer.completionHandler {
                     if (it.succeeded()) {
+                        log.info { "started producer verticle" }
                         startPromise.complete()
                     } else {
                         startPromise.fail(it.cause())

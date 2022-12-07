@@ -40,6 +40,7 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
 
         client.start {
             if (it.succeeded()) {
+                log.info { "started sequential consumer verticle" }
                 subscribe(queueUrl, address, workersCount, timeout, bufferSize, pollingInterval)
                 startPromise.complete()
             } else {

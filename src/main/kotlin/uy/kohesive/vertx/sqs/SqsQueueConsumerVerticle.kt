@@ -34,6 +34,7 @@ class SqsQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
 
         client.start {
             if (it.succeeded()) {
+                log.info { "started consumer verticle" }
                 subscribe(pollingInterval, queueUrl, address, maxMessages, timeout)
                 startFuture.complete()
             } else {
