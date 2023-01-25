@@ -34,6 +34,8 @@ repositories {
 
 dependencies {
     implementation "io.vertx:vertx-core:$version_vertx"
+    implementation "io.vertx:vertx-service-factory:$version_vertx"
+    implementation "io.vertx:vertx-service-proxy:$version_vertx"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
@@ -41,7 +43,8 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-sqs")
 
     implementation "nl.komponents.kovenant:kovenant:$version_kovenant"
-
+    annotationProcessor("io.vertx:vertx-codegen:$version_vertx:processor")
+    implementation("io.vertx:vertx-codegen:$version_vertx:processor")
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
 
     testImplementation "io.vertx:vertx-unit:$version_vertx"
