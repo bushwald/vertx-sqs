@@ -109,11 +109,14 @@ class SqsClientImpl(val vertx: Vertx, val config: JsonObject, val credentialProv
 
     override fun receiveMessages(queueUrl: String, maxMessages: Int, resultHandler: Handler<AsyncResult<List<JsonObject>>>) {
         withClient { client ->
-            client.receiveMessageAsync(ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(maxMessages), resultHandler.withConverter { sqsResult ->
-                sqsResult.messages.map {
-                    it.toJsonObject()
-                }
-            })
+            client.receiveMessageAsync(ReceiveMessageRequest(queueUrl)
+                .withMaxNumberOfMessages(maxMessages)
+                .withMessageAttributeNames("All"),
+                resultHandler.withConverter { sqsResult ->
+                    sqsResult.messages.map {
+                        it.toJsonObject()
+                    }
+                })
         }
     }
 
