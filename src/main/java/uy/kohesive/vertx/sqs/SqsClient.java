@@ -47,7 +47,6 @@ public interface SqsClient {
      * </code>
      *
      */
-    // TODO: add support for attributes
     void sendMessage(String queueUrl, String messageBody, JsonObject attributes, Integer delaySeconds, Handler<AsyncResult<String>> resultHandler);
 
     /**
