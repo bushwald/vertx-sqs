@@ -1,10 +1,10 @@
-package uy.kohesive.vertx.sqs.test
+package org.bushwald.vertx.sqs.test
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import uy.kohesive.vertx.sqs.SqsClient
+import org.bushwald.vertx.sqs.SqsClient
 import org.elasticmq.rest.sqs.SQSRestServer
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import org.junit.AfterClass
@@ -29,7 +29,7 @@ class SqsClientTest {
         val ElasticMqHost = "localhost"
         val sqsAccountId = "000000000000"
 
-        fun getQueueUrl(queueName: String) = "http://${ElasticMqHost}:${ElasticMqPort}/$sqsAccountId/$queueName"
+        fun getQueueUrl(queueName: String) = "http://$ElasticMqHost:$ElasticMqPort/$sqsAccountId/$queueName"
 
         private var client: SqsClient by Delegates.notNull()
         private var sqsServer: SQSRestServer by Delegates.notNull()

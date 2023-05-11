@@ -1,11 +1,11 @@
-package uy.kohesive.vertx.sqs;
+package org.bushwald.vertx.sqs;
 
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import uy.kohesive.vertx.sqs.impl.SqsClientImpl;
+import org.bushwald.vertx.sqs.impl.SqsClientImpl;
 
 import java.util.List;
 import java.util.Map;

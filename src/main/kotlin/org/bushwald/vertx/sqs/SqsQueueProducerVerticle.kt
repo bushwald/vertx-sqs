@@ -1,4 +1,4 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import io.vertx.core.AbstractVerticle
@@ -6,7 +6,7 @@ import io.vertx.core.Handler
 import io.vertx.core.Promise
 import io.vertx.core.eventbus.Message
 import mu.KotlinLogging
-import uy.kohesive.vertx.sqs.impl.SqsClientImpl
+import org.bushwald.vertx.sqs.impl.SqsClientImpl
 import kotlin.properties.Delegates
 
 class SqsQueueProducerVerticle() : AbstractVerticle(), SqsVerticle {

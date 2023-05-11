@@ -1,4 +1,4 @@
-package uy.kohesive.vertx.sqs.impl
+package org.bushwald.vertx.sqs.impl
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonWebServiceRequest
@@ -18,7 +18,7 @@ import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
-import uy.kohesive.vertx.sqs.SqsClient
+import org.bushwald.vertx.sqs.SqsClient
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
