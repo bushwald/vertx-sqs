@@ -1,4 +1,4 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import mu.KLogger

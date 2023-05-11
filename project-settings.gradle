@@ -1,13 +1,13 @@
 ext {
-    projectUrl ="https://github.com/kohesive/vertx-sqs"
+    projectUrl ="https://github.com/bushwald/vertx-sqs"
     projectName = "Vertx-SQS"
     projectDescription = 'Connecting Vertx and AWS SQS'
     projectInception = '2015'
 
-    sonatypePackageGroup = "uy.kohesive"
+    sonatypePackageGroup = "org.bushwald"
     sonatypeStagingProfile = "283dd0bd283334"
-    scmUrl = "git://github.com:kohesive/vertx-sqs.git"
-    scmGitFile = "scm:git@github.com:kohesive/vertx-sqs.git"
+    scmUrl = "git://github.com:bushwald/vertx-sqs.git"
+    scmGitFile = "scm:git@github.com:bushwald/vertx-sqs.git"
 
     pomProjectName = projectName
     groupName = project.group
@@ -16,7 +16,7 @@ ext {
     licenseUrl = "$projectUrl/blob/master/LICENSE"
 
     organisation = groupName
-    primaryEmail = "oss@kohesive.io"
+    primaryEmail = "info@bushwald.com"
 
-    binTrayRepo = "kohesive"
+    binTrayRepo = "bushwald"
 }

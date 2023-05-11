@@ -1,4 +1,4 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import io.vertx.core.AbstractVerticle
@@ -7,7 +7,7 @@ import io.vertx.core.Promise
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
 import mu.KotlinLogging
-import uy.kohesive.vertx.sqs.impl.SqsClientImpl
+import org.bushwald.vertx.sqs.impl.SqsClientImpl
 import kotlin.properties.Delegates
 
 class SqsQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
@@ -34,6 +34,7 @@ class SqsQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
 
         client.start {
             if (it.succeeded()) {
+                log.info { "started consumer verticle" }
                 subscribe(pollingInterval, queueUrl, address, maxMessages, timeout)
                 startFuture.complete()
             } else {
