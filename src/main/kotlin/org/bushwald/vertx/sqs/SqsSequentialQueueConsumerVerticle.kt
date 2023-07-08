@@ -6,8 +6,9 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Promise
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
-import mu.KotlinLogging
 import org.bushwald.vertx.sqs.impl.SqsClientImpl
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
@@ -20,7 +21,7 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
     override var credentialsProvider: AWSCredentialsProvider? = null
 
     override var client: SqsClient by Delegates.notNull()
-    override val log = KotlinLogging.logger {}
+    override val log: Logger = LoggerFactory.getLogger(SqsSequentialQueueConsumerVerticle::class.java)
 
     private var pollingPool: ExecutorService by Delegates.notNull()
     private var routingPool: ExecutorService by Delegates.notNull()
@@ -40,7 +41,7 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
 
         client.start {
             if (it.succeeded()) {
-                log.info { "started sequential consumer verticle" }
+                log.info ("started sequential consumer verticle")
                 subscribe(queueUrl, address, workersCount, timeout, bufferSize, pollingInterval)
                 startPromise.complete()
             } else {

@@ -5,8 +5,9 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.Handler
 import io.vertx.core.Promise
 import io.vertx.core.eventbus.Message
-import mu.KotlinLogging
 import org.bushwald.vertx.sqs.impl.SqsClientImpl
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import kotlin.properties.Delegates
 
 class SqsQueueProducerVerticle() : AbstractVerticle(), SqsVerticle {
@@ -17,7 +18,7 @@ class SqsQueueProducerVerticle() : AbstractVerticle(), SqsVerticle {
     override var credentialsProvider: AWSCredentialsProvider? = null
 
     override var client: SqsClient by Delegates.notNull()
-    override val log = KotlinLogging.logger {}
+    override val log: Logger = LoggerFactory.getLogger(SqsQueueProducerVerticle::class.java)
 
     override fun start(startPromise: Promise<Void>) {
         client = SqsClientImpl(vertx, config(), credentialsProvider)
@@ -46,7 +47,7 @@ class SqsQueueProducerVerticle() : AbstractVerticle(), SqsVerticle {
                 }
                 consumer.completionHandler {
                     if (it.succeeded()) {
-                        log.info { "started producer verticle" }
+                        log.info ("started producer verticle")
                         startPromise.complete()
                     } else {
                         startPromise.fail(it.cause())

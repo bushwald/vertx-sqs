@@ -33,6 +33,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.slf4j:slf4j-jdk14:$slf4jVersion")
     implementation "io.vertx:vertx-core:$version_vertx"
     implementation "io.vertx:vertx-service-factory:$version_vertx"
     implementation "io.vertx:vertx-service-proxy:$version_vertx"
@@ -48,8 +49,6 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
 
     testImplementation "io.vertx:vertx-unit:$version_vertx"
-
-    implementation "io.github.microutils:kotlin-logging-jvm:$logging_version"
 
     testImplementation "org.elasticmq:elasticmq-core_2.13:$version_elasticmq"
     testImplementation "org.elasticmq:elasticmq-rest-sqs_2.13:$version_elasticmq"

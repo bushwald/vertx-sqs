@@ -17,7 +17,7 @@ import kotlin.properties.Delegates
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class SqsQueueConsumerVerticleTest {
+class ConsumerSubscribeAwaitReplyTest {
 
     companion object {
 
@@ -41,9 +41,10 @@ class SqsQueueConsumerVerticleTest {
             "region"    to "us-west-2",
 
             // Consumer verticle config
-            "pollingInterval" to 10,
-            "queueUrl"        to getQueueUrl("testQueue"),
-            "address"         to "sqs.queue.test"
+            "pollingInterval"           to 500,
+            "queueUrl"                  to getQueueUrl("testQueue"),
+            "address"                   to "sqs.queue.await.test",
+            "awaitReplyBeforePolling"   to true
         ))
 
         @BeforeClass
@@ -114,13 +115,13 @@ class SqsQueueConsumerVerticleTest {
     private fun testConsume(context: TestContext, acknowledgeDelete: Boolean) {
         val latch       = CountDownLatch(1)
         val testQueue   = getQueueUrl("testQueue")
-        val messageBody = "Test message body, acknowledged=$acknowledgeDelete"
+        val messageBody = "Test message body, waited for reply and acknowledged=$acknowledgeDelete"
 
         context.withClient { client ->
             client.sendMessage(testQueue, messageBody, context.asyncAssertSuccess())
         }
 
-        val consumer = vertx.eventBus().consumer("sqs.queue.test", Handler { message: Message<JsonObject> ->
+        val consumer = vertx.eventBus().consumer("sqs.queue.await.test", Handler { message: Message<JsonObject> ->
             if (acknowledgeDelete) {
                 message.reply(null) // delete the message
             }
@@ -136,7 +137,7 @@ class SqsQueueConsumerVerticleTest {
             consumer.unregister()
 
             vertx.executeBlocking(Handler { promise: Promise<Void> ->
-                Thread.sleep(1500)
+                Thread.sleep(1100)
                 promise.complete()
             }, context.asyncAssertSuccess() {
                 context.withClient { client ->
