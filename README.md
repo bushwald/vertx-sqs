@@ -7,12 +7,22 @@ This Vert.x client allows Amazon SQS access in two ways:
 * As a @VertxGen service bridge to Amazon SQS Async Client methods
 * As an Amazon SQS queue consuming verticle
 
+## Updates in this Fork
+
+This is a modernized fork of the original `kohesive/vertx-sqs` library. Key updates include:
+- **Dependency Upgrades**: Bumped Java to 17, Gradle to 7.6, and updated Kotlin, Vert.x, and AWS SDK dependencies to newer versions.
+- **Modernized APIs**: Updated deprecated Vert.x methods to use Promises instead of Futures, and replaced the deprecated Vert.x logger with SLF4J.
+- **Enhanced SQS Features**: 
+  - Added support for sending messages with attributes.
+  - Implemented a consumer subscription that waits for the message reply before polling again.
+- **Build Improvements**: Swapped deprecated Sonatype/Bintray publishing for Maven publishing and removed broken JCenter dependencies.
+
 ### Gradle /Maven
 
 Add add the following dependency:
 
 ```
-org.bushwald.vertx:vertx-sqs:1.0.0
+org.bushwald.vertx:vertx-sqs:0.0.9
 ```
 
 
@@ -74,6 +84,19 @@ vertx.eventBus().consumer("sqs.queue.MyQueue", message -> {
     // ...
     message.reply(null);
 });
+```
+
+### Await Reply Before Polling
+
+By default, the consumer polls the SQS queue periodically without waiting for the event bus consumers to process and reply to the messages. If you want the consumer to wait until all messages from the current poll are processed before polling again, set `awaitReplyBeforePolling` to `true`:
+
+```java
+JsonObject config = new JsonObject()
+    // ... other config (credentials, region, etc.)
+    .put("pollingInterval", 1000)
+    .put("queueUrl", "https://sqs.us-west-2.amazonaws.com/1000/MyQueue")
+    .put("address", "sqs.queue.MyQueue")
+    .put("awaitReplyBeforePolling", true);
 ```
 
 ### Sequential consumer verticle
