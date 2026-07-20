@@ -1,14 +1,11 @@
-package uy.kohesive.vertx.sqs.test
+package org.bushwald.vertx.sqs.test
 
-import io.vertx.core.DeploymentOptions
-import io.vertx.core.Future
-import io.vertx.core.Handler
-import io.vertx.core.Vertx
+import io.vertx.core.*
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import uy.kohesive.vertx.sqs.SqsClient
+import org.bushwald.vertx.sqs.SqsClient
 import org.elasticmq.rest.sqs.SQSRestServer
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import org.junit.*
@@ -20,7 +17,7 @@ import kotlin.properties.Delegates
 
 @RunWith(VertxUnitRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class SqsQueueConsumerVerticleTest {
+class ConsumerSubscribeAwaitReplyTest {
 
     companion object {
 
@@ -28,8 +25,9 @@ class SqsQueueConsumerVerticleTest {
 
         val ElasticMqPort = 9324
         val ElasticMqHost = "localhost"
+        val sqsAccountId = "000000000000"
 
-        fun getQueueUrl(queueName: String) = "http://${ElasticMqHost}:${ElasticMqPort}/queue/$queueName"
+        fun getQueueUrl(queueName: String) = "http://$ElasticMqHost:$ElasticMqPort/$sqsAccountId/$queueName"
 
         private var client: SqsClient by Delegates.notNull()
         private var sqsServer: SQSRestServer by Delegates.notNull()
@@ -43,15 +41,17 @@ class SqsQueueConsumerVerticleTest {
             "region"    to "us-west-2",
 
             // Consumer verticle config
-            "pollingInterval" to 1000,
-            "queueUrl"        to getQueueUrl("testQueue"),
-            "address"         to "sqs.queue.test"
+            "pollingInterval"           to 500,
+            "queueUrl"                  to getQueueUrl("testQueue"),
+            "address"                   to "sqs.queue.await.test",
+            "awaitReplyBeforePolling"   to true
         ))
 
         @BeforeClass
         @JvmStatic
         fun before(context: TestContext) {
-            sqsServer = SQSRestServerBuilder.withPort(
+            sqsServer = SQSRestServerBuilder
+                .withPort(
                 ElasticMqPort
             ).start()
 
@@ -86,7 +86,7 @@ class SqsQueueConsumerVerticleTest {
                     getQueueUrl("testQueue")
                 )
 
-                vertx.deployVerticle("uy.kohesive.vertx.sqs.SqsQueueConsumerVerticle", DeploymentOptions().setConfig(
+                vertx.deployVerticle("org.bushwald.vertx.sqs.SqsQueueConsumerVerticle", DeploymentOptions().setConfig(
                     config
                 ), context.asyncAssertSuccess() {
                     deploymentId = it
@@ -113,15 +113,15 @@ class SqsQueueConsumerVerticleTest {
     }
 
     private fun testConsume(context: TestContext, acknowledgeDelete: Boolean) {
-        var latch       = CountDownLatch(1)
+        val latch       = CountDownLatch(1)
         val testQueue   = getQueueUrl("testQueue")
-        val messageBody = "Test message body, acknowledged=$acknowledgeDelete"
+        val messageBody = "Test message body, waited for reply and acknowledged=$acknowledgeDelete"
 
         context.withClient { client ->
             client.sendMessage(testQueue, messageBody, context.asyncAssertSuccess())
         }
 
-        val consumer = vertx.eventBus().consumer("sqs.queue.test", Handler { message: Message<JsonObject> ->
+        val consumer = vertx.eventBus().consumer("sqs.queue.await.test", Handler { message: Message<JsonObject> ->
             if (acknowledgeDelete) {
                 message.reply(null) // delete the message
             }
@@ -136,9 +136,9 @@ class SqsQueueConsumerVerticleTest {
         vertx.undeploy(deploymentId, context.asyncAssertSuccess() {
             consumer.unregister()
 
-            vertx.executeBlocking(Handler { future: Future<Void> ->
-                Thread.sleep(1500)
-                future.complete()
+            vertx.executeBlocking(Handler { promise: Promise<Void> ->
+                Thread.sleep(1100)
+                promise.complete()
             }, context.asyncAssertSuccess() {
                 context.withClient { client ->
                     client.receiveMessage(testQueue, context.asyncAssertSuccess() { messages ->

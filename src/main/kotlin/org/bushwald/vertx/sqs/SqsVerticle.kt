@@ -1,7 +1,8 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import com.amazonaws.auth.AWSCredentialsProvider
-import io.vertx.core.logging.Logger
+import org.slf4j.Logger
+
 
 interface SqsVerticle {
 

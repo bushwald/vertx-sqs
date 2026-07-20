@@ -1,0 +1,158 @@
+package org.bushwald.vertx.sqs.test
+
+import io.vertx.core.*
+import io.vertx.core.eventbus.Message
+import io.vertx.core.json.JsonObject
+import io.vertx.ext.unit.TestContext
+import io.vertx.ext.unit.junit.VertxUnitRunner
+import org.bushwald.vertx.sqs.SqsClient
+import org.elasticmq.rest.sqs.SQSRestServer
+import org.elasticmq.rest.sqs.SQSRestServerBuilder
+import org.junit.*
+import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.properties.Delegates
+
+@RunWith(VertxUnitRunner::class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+class SqsQueueConsumerVerticleTest {
+
+    companion object {
+
+        val vertx: Vertx = Vertx.vertx()
+
+        val ElasticMqPort = 9324
+        val ElasticMqHost = "localhost"
+        val sqsAccountId = "000000000000"
+
+        fun getQueueUrl(queueName: String) = "http://$ElasticMqHost:$ElasticMqPort/$sqsAccountId/$queueName"
+
+        private var client: SqsClient by Delegates.notNull()
+        private var sqsServer: SQSRestServer by Delegates.notNull()
+
+        val config = JsonObject(mapOf(
+            // SQS client config
+            "host"      to ElasticMqHost,
+            "port"      to ElasticMqPort,
+            "accessKey" to "someAccessKey",
+            "secretKey" to "someSecretKey",
+            "region"    to "us-west-2",
+
+            // Consumer verticle config
+            "pollingInterval" to 10,
+            "queueUrl"        to getQueueUrl("testQueue"),
+            "address"         to "sqs.queue.test"
+        ))
+
+        @BeforeClass
+        @JvmStatic
+        fun before(context: TestContext) {
+            sqsServer = SQSRestServerBuilder
+                .withPort(
+                ElasticMqPort
+            ).start()
+
+            println("Started SQS server")
+
+            client = SqsClient.create(
+                vertx,
+                config
+            )
+            val latch = CountDownLatch(1)
+            client.start(context.asyncAssertSuccess { latch.countDown() })
+            latch.await(10, TimeUnit.SECONDS)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun after(context: TestContext) {
+            client.stop(context.asyncAssertSuccess())
+            vertx.close(context.asyncAssertSuccess())
+
+            sqsServer.stopAndWait()
+        }
+    }
+
+    var deploymentId: String = ""
+
+    @Before
+    fun beforeTest(context: TestContext) {
+        context.withClient { client ->
+            client.createQueue("testQueue", mapOf("VisibilityTimeout" to "1"), context.asyncAssertSuccess() { queueUrl ->
+                context.assertEquals(queueUrl,
+                    getQueueUrl("testQueue")
+                )
+
+                vertx.deployVerticle("org.bushwald.vertx.sqs.SqsQueueConsumerVerticle", DeploymentOptions().setConfig(
+                    config
+                ), context.asyncAssertSuccess() {
+                    deploymentId = it
+                })
+            })
+        }
+    }
+
+    @After
+    fun afterTest(context: TestContext) {
+        context.withClient { client ->
+            client.deleteQueue(getQueueUrl("testQueue"), context.asyncAssertSuccess())
+        }
+    }
+
+    @Test
+    fun testConsumeWithDeleteAcknowledge(context: TestContext) {
+        testConsume(context, true)
+    }
+
+    @Test
+    fun testConsumeWithoutDeleteAcknowledge(context: TestContext) {
+        testConsume(context, false)
+    }
+
+    private fun testConsume(context: TestContext, acknowledgeDelete: Boolean) {
+        val latch       = CountDownLatch(1)
+        val testQueue   = getQueueUrl("testQueue")
+        val messageBody = "Test message body, acknowledged=$acknowledgeDelete"
+
+        context.withClient { client ->
+            client.sendMessage(testQueue, messageBody, context.asyncAssertSuccess())
+        }
+
+        val consumer = vertx.eventBus().consumer("sqs.queue.test", Handler { message: Message<JsonObject> ->
+            if (acknowledgeDelete) {
+                message.reply(null) // delete the message
+            }
+
+            context.assertEquals(messageBody, message.body().getString("body"))
+            latch.countDown()
+        })
+
+        latch.await(3, TimeUnit.SECONDS)
+
+        // We wait longer than VisibilityTimeout, undeploy all the consumers and check if the queue is empty or not
+        vertx.undeploy(deploymentId, context.asyncAssertSuccess() {
+            consumer.unregister()
+
+            vertx.executeBlocking(Handler { promise: Promise<Void> ->
+                Thread.sleep(1500)
+                promise.complete()
+            }, context.asyncAssertSuccess() {
+                context.withClient { client ->
+                    client.receiveMessage(testQueue, context.asyncAssertSuccess() { messages ->
+                        println("${ messages.size } message(s) received: ${ messages.joinToString(", ") }")
+                        context.assertEquals(acknowledgeDelete, messages.isEmpty())
+                    })
+                }
+            })
+        })
+    }
+
+    private fun TestContext.withClient(clientCode: (SqsClient) -> Unit) {
+        val theClient = client
+        this.assertNotNull(theClient)
+        clientCode(theClient)
+    }
+
+}

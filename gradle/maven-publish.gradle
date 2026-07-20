@@ -1,0 +1,34 @@
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+
+group "$group"
+version "$version"
+
+publishing {
+    publications {
+        vertxSQS(MavenPublication) {
+            description = 'Non-blocking Vertx library for sending and receiving AWS SQS messages'
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'central'
+            url = "https://artifactory.yourdomain.com/artifactory/src-release-local"
+            credentials {
+                username "username"
+                password "password"
+            }
+        }
+    }
+}
+
+publish.doLast {
+    copy {
+        from "$buildDir/resources/main/README.md"
+        into "$rootDir"
+    }
+}
+
+publish.dependsOn( test )

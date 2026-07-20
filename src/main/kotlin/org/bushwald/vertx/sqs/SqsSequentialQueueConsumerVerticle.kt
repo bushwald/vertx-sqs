@@ -1,14 +1,14 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
-import io.vertx.core.Future
-import io.vertx.core.Handler
+import io.vertx.core.Promise
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
-import io.vertx.core.logging.LoggerFactory
-import uy.kohesive.vertx.sqs.impl.SqsClientImpl
+import org.bushwald.vertx.sqs.impl.SqsClientImpl
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
@@ -21,12 +21,12 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
     override var credentialsProvider: AWSCredentialsProvider? = null
 
     override var client: SqsClient by Delegates.notNull()
-    override val log = LoggerFactory.getLogger("SqsSequentialQueueConsumerVerticle")
+    override val log: Logger = LoggerFactory.getLogger(SqsSequentialQueueConsumerVerticle::class.java)
 
     private var pollingPool: ExecutorService by Delegates.notNull()
     private var routingPool: ExecutorService by Delegates.notNull()
 
-    override fun start(startFuture: Future<Void>) {
+    override fun start(startPromise: Promise<Void>) {
         client = SqsClientImpl(vertx, config(), credentialsProvider)
 
         val queueUrl        = config().getString("queueUrl")
@@ -41,10 +41,12 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
 
         client.start {
             if (it.succeeded()) {
+                log.info ("started sequential consumer verticle")
                 subscribe(queueUrl, address, workersCount, timeout, bufferSize, pollingInterval)
-                startFuture.complete()
+                startPromise.complete()
             } else {
-                startFuture.fail(it.cause())
+                println(it.cause())
+                startPromise.fail(it.cause())
             }
         }
     }
@@ -101,7 +103,7 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
                 val sqsMessage = buffer.take()
                 val latch = CountDownLatch(1)
 
-                vertx.eventBus().send(address, sqsMessage.message, DeliveryOptions().setSendTimeout(timeout), Handler { ar: AsyncResult<Message<Void?>> ->
+                vertx.eventBus().request(address, sqsMessage.message, DeliveryOptions().setSendTimeout(timeout)) { ar: AsyncResult<Message<Void?>> ->
                     if (ar.succeeded()) {
                         // Had to code it like this, as otherwise I was getting 'bad enclosing class' from Java compiler
                         deleteMessage(queueUrl, sqsMessage.receipt)
@@ -110,7 +112,7 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
                     }
 
                     latch.countDown()
-                })
+                }
 
                 latch.await(100 + timeout, TimeUnit.MILLISECONDS)
             }
@@ -120,15 +122,15 @@ class SqsSequentialQueueConsumerVerticle() : AbstractVerticle(), SqsVerticle {
         }
     }
 
-    override fun stop(stopFuture: Future<Void>) {
+    override fun stop(stopPromise: Promise<Void>) {
         routingPool.shutdown()
         pollingPool.shutdown()
 
         client.stop {
             if (it.succeeded()) {
-                stopFuture.complete()
+                stopPromise.complete()
             } else {
-                stopFuture.fail(it.cause())
+                stopPromise.fail(it.cause())
             }
         }
     }

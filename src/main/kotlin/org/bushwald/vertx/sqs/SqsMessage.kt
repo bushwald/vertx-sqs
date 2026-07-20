@@ -1,4 +1,4 @@
-package uy.kohesive.vertx.sqs
+package org.bushwald.vertx.sqs
 
 import io.vertx.core.json.JsonObject
 

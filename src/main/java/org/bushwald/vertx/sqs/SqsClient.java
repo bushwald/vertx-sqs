@@ -1,12 +1,11 @@
-package uy.kohesive.vertx.sqs;
+package org.bushwald.vertx.sqs;
 
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import kotlin.Unit;
-import uy.kohesive.vertx.sqs.impl.SqsClientImpl;
+import org.bushwald.vertx.sqs.impl.SqsClientImpl;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,6 @@ public interface SqsClient {
      * </code>
      *
      */
-    // TODO: add support for attributes
     void sendMessage(String queueUrl, String messageBody, JsonObject attributes, Integer delaySeconds, Handler<AsyncResult<String>> resultHandler);
 
     /**
